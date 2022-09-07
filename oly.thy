@@ -6,7 +6,7 @@ begin
 
 lemma n6_lema:
   fixes x::nat and y::nat and n::nat
-  assumes "\<forall> n . x^2^n -1 mod 2^n*y + 1 = 0"
+  assumes "\<forall> n . (x^(2^n)-1) mod (2^n*y + 1) = 0"
   shows "x=1"
   sorry
 
@@ -38,7 +38,7 @@ value "prime 1"
 lemma n8_lemma:
   fixes p::nat and r::int and a::int and b::int
   assumes "p>100" "prime p"
-  shows "\<forall> r . \<exists> a b . a*a + b^5 - r mod p = 0"
+  shows "\<forall> r . \<exists> a b . (a*a + b^5 - r) mod p = 0"
   sorry
 
 end
