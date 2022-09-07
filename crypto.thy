@@ -35,20 +35,21 @@ def eea(a, b):
 
 *)
 
-(* y^2 = a*x^3 + b*x + c *)
+(* y^2 = x^3 + a*x + b *)
 
 
-datatype Kriva = EC nat nat nat Polje
+datatype Kriva = EC nat nat Polje
 
 datatype Tacka = T nat nat | TACKA_INF
 
 fun na_krivi :: "Tacka \<Rightarrow> Kriva \<Rightarrow> bool" where
-"na_krivi (T x y) (EC a b c (F p)) \<longleftrightarrow> a*x^3 + b*x + c mod p = y^2 mod p" | 
-"na_krivi TACKA_INF (EC a b c (F p)) \<longleftrightarrow> True"
+"na_krivi (T x y) (EC a b (F p)) \<longleftrightarrow> (x^3 + a*x + b) mod p = y^2 mod p" | 
+"na_krivi TACKA_INF (EC a b (F p)) \<longleftrightarrow> True"
 
 (* pretpostavimo da je drugi argument prost pa uvek postoji inverz *)
 fun inverse :: "nat \<Rightarrow> nat \<Rightarrow> nat" where
  "inverse x y =  (x^(y-2)) mod y"
+ 
 
 fun inverse_ef :: "nat \<Rightarrow> nat \<Rightarrow> nat" where
 "inverse_ef a m = (let	(g, x, y) = eea a m 
@@ -58,9 +59,11 @@ value "inverse 2 7"
 value "inverse 2 13"
 
 fun oduzmi_mod :: "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat" where
-"oduzmi_mod x y p = (if x > y then (x-y) mod p else (y-x) mod p)"
+"oduzmi_mod x y p = (if x \<ge> y then (x-y) mod p else (p-((y-x) mod p)) mod p)"
 
 value "oduzmi_mod 13 27 4"
+value "oduzmi_mod 3 13 5"
+value "oduzmi_mod 26 27 3"
 
 fun saberi_EC :: "Tacka \<Rightarrow> Tacka \<Rightarrow> Kriva \<Rightarrow> Tacka" where
 "saberi_EC TACKA_INF X K = X" |
@@ -76,7 +79,7 @@ in ( T x' y'))" |
 *)
 
 
-"saberi_EC (T x1 y1) (T x2 y2) (EC a b c (F p)) = 
+"saberi_EC (T x1 y1) (T x2 y2) (EC a b (F p)) = 
 (let s = oduzmi_mod y2 y1 p * (inverse (oduzmi_mod x2 x1 p) p)
 in let x = oduzmi_mod (oduzmi_mod (s*s) x1 p) x2 p
 in let y = oduzmi_mod ( s * (oduzmi_mod x1 x p)) y1 p
@@ -87,8 +90,13 @@ in (T x y)
   apply auto
   apply (metis Kriva.exhaust Polje.exhaust Tacka.exhaust)
 *)
-  
 
+value "na_krivi (T 3 1) (EC 2 2 (F 17))"
+value "na_krivi (T 6 3) (EC 2 2 (F 17))"
+value "saberi_EC (T 3 1) (T 6 3) (EC 2 2 (F 17))"
+value "na_krivi (saberi_EC (T 3 1) (T 6 3) (EC 2 2 (F 17))) (EC 2 2 (F 17))"
+
+  
 (* X, Y \<in> EC \<longrightarrow> X + Y \<in> EC *)
 lemma saberi_zat:
   assumes "na_krivi X K"
