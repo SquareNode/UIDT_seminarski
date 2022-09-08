@@ -2,6 +2,11 @@ theory crypto
   imports Complex_Main
 begin
 
+(*
+definition my_nat :: "nat set" where
+"my_nat = set [1,2,3,...]"
+*)
+
 datatype Polje = F nat
 
 primrec elementi :: "Polje \<Rightarrow> nat set" where
@@ -13,7 +18,7 @@ primrec saberi :: "nat \<Rightarrow> nat \<Rightarrow> Polje \<Rightarrow> nat" 
 primrec pomnozi :: "nat \<Rightarrow> nat \<Rightarrow> Polje \<Rightarrow> nat" where 
 "pomnozi x y (F p) = (if {x,y} \<subset> elementi (F p) then (x * y) mod p else 1000)"
 
-(* ne radi... *)
+(* ne radi rekurzija, ispod python funkcija *)
 fun eea :: "nat \<Rightarrow> nat \<Rightarrow> (nat \<times> nat \<times> nat) " where 
 "eea 0 b = (b, 0 , 1) " |
 "eea a b = (let (g,  y,  x) = eea (b mod a) a
@@ -46,9 +51,15 @@ fun na_krivi :: "Tacka \<Rightarrow> Kriva \<Rightarrow> bool" where
 "na_krivi (T x y) (EC a b (F p)) \<longleftrightarrow> (x^3 + a*x + b) mod p = y^2 mod p" | 
 "na_krivi TACKA_INF (EC a b (F p)) \<longleftrightarrow> True"
 
+fun pow :: "nat \<Rightarrow> nat \<Rightarrow> nat" where 
+  "pow x n =  (if n = 0 then 1
+      else if n mod 2 = 0 then  pow (x * x) (n div 2) 
+      else x * pow x (n - 1))"
+
 (* pretpostavimo da je drugi argument prost pa uvek postoji inverz *)
 fun inverse :: "nat \<Rightarrow> nat \<Rightarrow> nat" where
- "inverse x y =  (x^(y-2)) mod y"
+(* "inverse x y = ( pow x (y-2) ) mod y" *)
+ "inverse x y = (x^(y-2)) mod y"
  
 
 fun inverse_ef :: "nat \<Rightarrow> nat \<Rightarrow> nat" where
@@ -69,7 +80,7 @@ fun saberi_EC :: "Tacka \<Rightarrow> Tacka \<Rightarrow> Kriva \<Rightarrow> Ta
 "saberi_EC TACKA_INF X K = X" |
 "saberi_EC X TACKA_INF K = X" |
 
-(* dupliranje - potrebno function i dokaz zaustavljanja*)
+(* dupliranje - potrebno function umesto fun i dokaz zaustavljanja*)
 (*
 "saberi_EC (T x y) (T x y) (EC a b c (F p)) =
 (let s = (3 * x*x + a) mod p * inverse ((2 * y) mod p) p
@@ -90,6 +101,9 @@ in (T x y)
   apply auto
   apply (metis Kriva.exhaust Polje.exhaust Tacka.exhaust)
 *)
+
+(* ne prolazi dokaz za zaustavljanje *)
+
 
 value "na_krivi (T 3 1) (EC 2 2 (F 17))"
 value "na_krivi (T 6 3) (EC 2 2 (F 17))"
@@ -120,7 +134,7 @@ primrec pomnozi_EC :: "nat \<Rightarrow> Tacka \<Rightarrow> Kriva \<Rightarrow>
 "pomnozi_EC 0 X K = TACKA_INF" |
 "pomnozi_EC (Suc n) X K = saberi_EC X (pomnozi_EC n X K) K"
 
-lemma pom_na_krivi:
+lemma pomnozi_na_krivi:
   assumes "na_krivi X K"
   fixes n::nat
   shows "na_krivi (pomnozi_EC n X K) K"
